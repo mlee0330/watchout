@@ -1,5 +1,12 @@
 // start slingin' some d3 here.
 
+// TODO: Add an enemy
+// TODO: Increase radius
+// TODO: Nightmare mode
+// TODO: CSS
+// TODO: Speed up
+
+
 var boardHeight = 600;
 var boardWidth = 800;
 var highScore = 0;
@@ -13,12 +20,11 @@ var board = body.append('svg')
                 .attr('height', boardHeight);
 
 var drag = d3.behavior.drag()
-             .on('dragstart', function() { circle.style('fill', 'purple'); })
-             .on('drag', function() { circle.attr('cx', d3.event.x)
+             .on('dragstart', function() { player.style('fill', 'purple'); })
+             .on('drag', function() { player.attr('cx', d3.event.x)
                                             .attr('cy', d3.event.y);})
-             .on('dragend', function() {circle.style('fill', 'black');});
-
-var circle = board.selectAll('.draggableCircle')
+             .on('dragend', function() {player.style('fill', 'black');});
+var player = board.selectAll('.draggableCircle')
                  .data([{ x: (boardWidth / 2), y: (boardHeight/2), r: 20}])
                  .enter()
                  .append("circle")
@@ -36,6 +42,7 @@ var Enemy = function(x, y) {
 };
 
 Enemy.prototype.move = function() {
+  player.immune = false;
   this.x = Math.floor(Math.random() * boardWidth);
   this.y = Math.floor(Math.random() * boardHeight);
 };
@@ -52,20 +59,37 @@ var enemyCircles = board.selectAll("circle")
                         .data(enemies)
                         .enter()
                         .append("circle");
-
+// TODO Add class to enemies for selections
 var enemyCirclesAttributes = enemyCircles
                             .attr("cx", function(d) { return d.x; })
                             .attr("cy", function(d) { return d.y; })
                             .attr("r", 10)
                             .style("fill", "red");
 // <circle></circle>
+
+
+var addEnemy = function() {
+  var enemy = new Enemy(0,0);
+  enemies.push(enemy);
+  // TODO: Clarify selections
+  enemyCircles = board.selectAll("circle")
+                          .data(enemies, function(d) { return d; });
+  enemyCircles.enter()
+              .append("circle");
+
+  enemyCirclesAttributes = enemyCircles
+                              .attr("cx", function(d) { return d.x; })
+                              .attr("cy", function(d) { return d.y; })
+                              .attr("r", 10)
+                              .style("fill", "red");
+}
 var update = function() {
   for (var i = 0; i < enemies.length; i++) {
     enemies[i].move();
   }
   enemyCirclesAttributes = enemyCircles
                             .transition()
-                            .duration(1000)
+                            .duration(1950)
                             .tween('custom', collisionDetectionTween)
                             .attr("cx", function(d) { return d.x; })
                             .attr("cy", function(d) { return d.y; });
@@ -74,11 +98,26 @@ var update = function() {
 var checkCollision = function(enemy, callback) {
   // check for collision
   // run callback if collision
-  callback();
-}
-var onCollision = function() {
+  var radiusSum = parseFloat(enemy.attr('r')) + parseFloat(player.attr('r'));
+  var xDiff = parseFloat(enemy.attr('cx')) - parseFloat(player.attr('cx'));
+  var yDiff = parseFloat(enemy.attr('cy')) - parseFloat(player.attr('cy'));
 
+  var separation = Math.sqrt(Math.pow(xDiff, 2) + Math.pow(yDiff, 2));
+  if (separation < radiusSum) {
+    callback();
+  }
 }
+
+var onCollision = function() {
+  if (gameStats.highScore < gameStats.score) {
+    gameStats.highScore = gameStats.score;
+  }
+  gameStats.score = 0;
+
+  gameStats.collisions++;
+  player.immune = true;
+}
+
 var collisionDetectionTween = function(endData, i) {
   var enemy = d3.select(this);
   var startPosition = {
@@ -94,7 +133,9 @@ var collisionDetectionTween = function(endData, i) {
     // console.log('t: ' + t);
 
     // run check collision function
-    checkCollision(enemy, onCollision);
+    if (!player.immune) {
+      checkCollision(enemy, onCollision);
+    }
     var enemyNextPos = {
       x: startPosition.x + (endData.x - startPosition.x) * t,
       y: startPosition.y + (endData.y - startPosition.y) * t
@@ -103,18 +144,27 @@ var collisionDetectionTween = function(endData, i) {
                 .attr('cy', enemyNextPos.y);
   }
 }
+
 var increaseScore = function() {
   gameStats.score += 489;
   updateScore();
 };
+
 var updateScore = function() {
   d3.select('#current-score')
     .text(gameStats.score.toString());
+  d3.select('#collision-count')
+    .text(gameStats.collisions.toString());
+  d3.select('#highscore')
+    .text(gameStats.highScore.toString());
 };
 
 var gameStats = {
-  score: 0
+  score: 0,
+  highScore: 0,
+  collisions: 0
 };
+update();
 
 setInterval(update, 2000);
 setInterval(increaseScore, 50);
