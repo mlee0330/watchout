@@ -5,12 +5,21 @@
   </head>
   <body>
     <div class="scoreboard">
+    <div class="gamemodes">
+    <button class="gameModeButton" id="toggleAdd" onclick="toggleAdd()">Enemies mulitiply!</button>
+    <button class="gameModeButton" id="toggleRadius" onclick="toggleRadius()">Enemies get larger!</button>
+    <button class="gameModeButton" id="toggleSpeed" onclick="toggleSpeed()">Enemies get faster!</button>
+    <button class="gameModeButton" id="toggleHunterMode" onclick="toggleHunterMode()">Hunter mode!</button>
+    <button class="gameModeButton" id="toggleNightmare" onclick="toggleNightmare()">Nightmare Mode!</button>
+    </div>
       <!-- Modify the scoreboard when important events occur in your game! -->
       <div class="high">High score: <span id="highscore">0</span></div>
       <div class="current">Current score: <span id="current-score">0</span></div>
       <div class="collisions">Collisions: <span id="collision-count">0</span></div>
     </div>
     <script src="lib/d3.js" charset="utf-8"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src='watchout.js'></script>
+
   </body>
 </html>
